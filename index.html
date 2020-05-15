@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    <form id="form">
+        <label>Print N</label><input name="N" type="text"/><br><br>
+        <label>Print M</label><input name="M" type="text"/><br><br>
+        <input type="submit" value="Использовать значения в инпутах" id="button"/><br><br>
+        <input type="submit" value="Получить состояние из файла NewArray.json" id="button2">
+    </form>
+    <script>
+        var form = document.getElementById('form');
+        var button = document.getElementById('button');
+        var button2 = document.getElementById('button2');
+        var globalState = [];//для хранения нового состояния
+
+        button.addEventListener('click', function (e) {//кнопка go
+            e.preventDefault();
+            model.create(model.getMassive(),model.getInputValues());
+        });
+
+        button2.addEventListener('click', function (e) {//кнопка go
+            e.preventDefault();
+            fetch('NewArray.json')
+                .then(response=>response.json())
+                .then(data=>{
+                    model.create(data,data.NandM);
+                })
+        });
+
+        var model = {
+            getInputValues: function (e) {//возвращает значения N и M
+                var data = new FormData(form);
+                var N = +data.get('N');//столбцы
+                var M = +data.get('M');//строки
+                return {N:N,M:M};//
+            },
+            getMassive: function () {//возвращаем массив из N*M элементов
+                var length = this.getInputValues().N * this.getInputValues().M;
+                var massive = [];
+                for(var i =0; i<length; i++){
+                    massive=massive.concat(Math.floor(Math.random()+0.5));//заполняем массив рандомными числами 0/1
+                }
+                return {massive:massive};
+            },
+            create: function (arr,infoTable) {//строит таблицу по данным {arr} и {N,M}
+
+                var table = document.createElement('table');//создаем таблицу
+                document.body.append(table);//вставляем в body
+
+                var newState = [];//для хранения нового состояния
+                //строим таблицу M на N
+                for(var i=0; i< infoTable.M; i++){
+                    var tr = document.createElement('tr');
+                    table.append(tr);
+                    for(var j=0; j<infoTable.N; j++){
+                        var td = document.createElement('td');
+                        tr.append(td);
+                        var index = i*infoTable.N + j;//индексы от 0 до M*N-1
+
+                        newState = newState.concat(arr.massive[index]);//записываем новое состояние
+
+                        //4 условия где у элементов нет 8 соседей
+                        if(index % infoTable.N==0){
+                            td.textContent = arr.massive[index];
+                            td.style.color='green';//колонка слева
+                        }else if((index+1) % infoTable.N==0){
+                            td.textContent = arr.massive[index];
+                            td.style.color='yellow';//колонка справа
+                        }else if(index>0 && index<infoTable.N-1){
+                            td.textContent = arr.massive[index];
+                            td.style.color='red';//строка сверху
+                        }else if(index<infoTable.M*infoTable.N-1 && index>infoTable.N*(infoTable.M-1)-1){
+                            td.textContent = arr.massive[index];
+                            td.style.color='blue';//строка сверху
+                            //остальные уд условию обычный цвет
+                        }else{
+                            td.textContent = arr.massive[index];
+                            var elem = arr.massive;//что бы не таскать большое название
+                            var count = 0;//кол-во соседей ==1
+                            //подсчет ол-ва соседей ==1
+                            count+=elem[index-infoTable.N]+elem[index-infoTable.N-1]+
+                                elem[index-infoTable.N+1]+elem[index-1]+elem[index+1]+
+                                elem[index+infoTable.N]+elem[index+infoTable.N-1]+
+                                elem[index+infoTable.N+1];
+                            //4 условия по заданию для соседей
+                            if(elem[index] == 1){
+                                if(count == 2 || count == 3){
+                                    newState[index] = 1;
+                                }
+                                if(count <2){
+                                    newState[index] = 0;
+                                }
+                                if(count>3){
+                                    newState[index] = 0;
+                                }
+                            }else if(elem[index] == 0){
+                                if(count ==3){
+                                    newState[index] = 1;
+                                }
+                            }
+                        }
+                    }
+                }
+                newState = {massive:newState};//обернули состояние в объект для работы с ним в create
+                globalState = newState;//записали новое остояние в глобальное хранилище состояния
+                console.log(newState.massive);
+
+                setTimeout(()=>{
+                    table.remove();//не забываем удалить старую таблицу
+                    this.create(newState,infoTable);//каждую 1с рекурсивно вызывается model.create
+                },1000);
+            },
+        };
+    </script>
+</body>
+</html>
+
+<!--
+мой файл NewArray.json выглядит так:
+{
+  "massive": [1,1,0,0,1,1,0,0,0,1,0,1,1,0,0,0,0,1,1,0,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,0,0,1,1,1,1,1,0],
+  "NandM": {
+    "N": 7,
+    "M": 7
+  }
+}
+-->

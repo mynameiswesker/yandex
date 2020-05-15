@@ -1,0 +1,16 @@
+body{
+    background: #ecf3f9;
+}
+
+table {
+    width: 70%; /* Ширина таблицы */
+    border-spacing: 2px; /* Расстояние между ячейками */
+    display: table;
+    margin: auto;
+}
+
+td, tr {
+    background: #b3a594; /* Цвет фона ячеек */
+    padding: 5px; /* Поля вокруг текста */
+    text-align: center;
+}
